@@ -658,7 +658,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
               </svg>
               <div class="ring-mid">
                 <div class="ring-pct" id="rPctW">0%</div>
-                <div class="ring-lbl">done</div>
+                <div class="ring-lbl" id="rLblW">today</div>
               </div>
             </div>
           </div>
@@ -755,7 +755,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
               </svg>
               <div class="ring-mid">
                 <div class="ring-pct" id="rPct">0%</div>
-                <div class="ring-lbl">done</div>
+                <div class="ring-lbl" id="rLblP">today</div>
               </div>
             </div>
           </div>
@@ -1280,10 +1280,17 @@ function renderWorkDash(){
   const wBlocked=wActive.filter(t=>t.status==='blocked'||t.bucketId==='blocked');
   const wHigh=wActive.filter(t=>t.pri==='high');
   const today=new Date();today.setHours(0,0,0,0);
+  const tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
   const weekAgo=new Date(today);weekAgo.setDate(today.getDate()-7);
   const wDoneWeek=wTasks.filter(t=>t.done&&t.at&&new Date(t.at)>=weekAgo);
   const wTotal=wActive.length;
-  const pct=wTasks.length>0?Math.round((wTasks.filter(t=>t.done).length/wTasks.length)*100):0;
+
+  // ring = today's work tasks: how many due today are done vs total due today
+  const wDueToday=wTasks.filter(t=>t.due&&new Date(t.due+'T00:00:00')>=today&&new Date(t.due+'T00:00:00')<tomorrow);
+  const wDueTodayDone=wDueToday.filter(t=>t.done);
+  const pct=wDueToday.length>0?Math.round((wDueTodayDone.length/wDueToday.length)*100):0;
+  const ringLblW=$('rLblW');
+  if(ringLblW)ringLblW.textContent=wDueToday.length>0?'today':'no due today';
 
   // stats
   $('wTotal').textContent=wTotal;
@@ -1372,7 +1379,14 @@ function renderPersonalDash(){
   const allDone=S.tasks.filter(t=>t.done&&t.cat==='personal');
   const allTotal=S.tasks.filter(t=>t.cat==='personal');
   const active=allActive, done=allDone, high=active.filter(t=>t.pri==='high'), total=allTotal.length;
-  const pct=total>0?Math.round((done.length/total)*100):0;
+  // ring = today's personal tasks: how many due today are done vs total due today
+  const today=new Date();today.setHours(0,0,0,0);
+  const tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
+  const dueToday=allTotal.filter(t=>t.due&&new Date(t.due+'T00:00:00')>=today&&new Date(t.due+'T00:00:00')<tomorrow);
+  const dueTodayDone=dueToday.filter(t=>t.done);
+  const pct=dueToday.length>0?Math.round((dueTodayDone.length/dueToday.length)*100):0;
+  const ringLblP=$('rLblP');
+  if(ringLblP)ringLblP.textContent=dueToday.length>0?`${dueTodayDone.length}/${dueToday.length} today`:'no due today';
   $('sTotal').textContent=total;$('sPend').textContent=active.length;$('sDone').textContent=done.length;$('sHigh').textContent=high.length;
   $('sTotalF').textContent=total>0?`${active.length} remaining`:'All time';
   $('sDoneF').textContent=total>0?`${pct}% complete`:'—';
@@ -1382,7 +1396,6 @@ function renderPersonalDash(){
   const ring=$('dRing');if(ring)ring.style.strokeDashoffset=175.9-(175.9*pct/100);
   $('rPct').textContent=`${pct}%`;
   const hs=$('heroSP');if(hs){if(active.length===0)hs.textContent='All caught up! Great work. 🎉';else if(active.length<=3)hs.textContent=`Just ${active.length} task${active.length>1?'s':''} remaining — finish strong.`;else hs.textContent=`${active.length} tasks to tackle today.`;}
-  const today=new Date();today.setHours(0,0,0,0);
   const od=active.filter(t=>t.due&&new Date(t.due+'T00:00:00')<today);
   const stripP=$('odStripP');
   if(stripP){if(od.length>0){stripP.classList.add('on');$('odTextP').textContent=`${od.length} overdue personal task${od.length>1?'s':''}`;} else stripP.classList.remove('on');}
@@ -1594,9 +1607,12 @@ function confirmAdder(bid){
   const inp=$('adderinp-'+bid),txt=inp?.value.trim();if(!txt)return;
   const adderEl=$('adder-'+bid);const tplId=adderEl?.dataset.tplId;
   const allTpls=[...BUILTIN_TEMPLATES,...(S.templates||[])];const tpl=tplId?allTpls.find(x=>x.id===tplId):null;
-  const task={id:uid(),text:txt,pri:$('adderpri-'+bid)?.value||'medium',cat:$('addercat-'+bid)?.value||'work',bucketId:bid,status:bid,src:'Manual',done:bid===(S.buckets.find(b=>b.title==='Done')?.id||'done'),checklist:tpl?(tpl.checklist.map(c=>({id:uid(),text:c,done:false}))):[],labels:[],at:new Date().toISOString()};
+  const bucket=S.buckets.find(b=>b.id===bid);
+  const autoToday=bucket&&bucket.title.toLowerCase()==='today';
+  const todayStr=new Date().toISOString().slice(0,10);
+  const task={id:uid(),text:txt,pri:$('adderpri-'+bid)?.value||'medium',cat:$('addercat-'+bid)?.value||'work',bucketId:bid,status:bid,src:'Manual',due:autoToday?todayStr:'',done:bid===(S.buckets.find(b=>b.title==='Done')?.id||'done'),checklist:tpl?(tpl.checklist.map(c=>({id:uid(),text:c,done:false}))):[],labels:[],at:new Date().toISOString()};
   if(adderEl)delete adderEl.dataset.tplId;
-  S.tasks.push(task);save();renderBoard();renderDash();closeAdder(bid);toast('Card added','success');earnXP(2,'Card created');
+  S.tasks.push(task);save();renderBoard();renderDash();closeAdder(bid);toast(autoToday?'Card added — due today':'Card added','success');earnXP(2,'Card created');
 }
 function openAdderTemplate(bid){
   const allTpls=[...BUILTIN_TEMPLATES,...(S.templates||[])];if(!allTpls.length){toast('No templates yet','info');return;}
@@ -1633,7 +1649,22 @@ function delClItem(i){const t=S.tasks.find(x=>x.id===cardEditId);if(!t)return;t.
 function addClItem(){const inp=$('cmClInp'),txt=inp.value.trim();if(!txt)return;const t=S.tasks.find(x=>x.id===cardEditId);if(!t)return;if(!t.checklist)t.checklist=[];t.checklist.push({id:uid(),text:txt,done:false});renderCardChecklist(t);inp.value='';inp.focus();}
 $('cmClInp').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addClItem();}});
 function addLabel(){const name=prompt('Label name:','New Label');if(!name||!name.trim())return;const cols=['#4f8ef7','#a78bfa','#34d399','#fbbf24','#f87171','#f97316','#ec4899'];const l={id:uid(),name:name.trim(),color:cols[S.labels.length%cols.length]};S.labels.push(l);save();const t=S.tasks.find(x=>x.id===cardEditId);if(t)renderCardLabels(t);renderBoard();toast('Label created','success');}
-function saveCard(){const t=S.tasks.find(x=>x.id===cardEditId);if(!t)return;t.text=$('cmTitle').value.trim()||t.text;t.description=$('cmDesc').value.trim();t.pri=$('cmPri').value;t.cat=$('cmCat').value;t.bucketId=$('cmBucket').value;t.due=$('cmDue').value||'';const doneBucket=S.buckets.find(b=>b.title==='Done');t.done=doneBucket?t.bucketId===doneBucket.id:false;t.status=t.bucketId;save();renderBoard();renderDash();closeCard();toast('Card saved','info',1800);}
+function saveCard(){
+  const t=S.tasks.find(x=>x.id===cardEditId);if(!t)return;
+  t.text=$('cmTitle').value.trim()||t.text;
+  t.description=$('cmDesc').value.trim();
+  t.pri=$('cmPri').value;t.cat=$('cmCat').value;
+  t.bucketId=$('cmBucket').value;
+  const bucket=S.buckets.find(b=>b.id===t.bucketId);
+  const inTodayBucket=bucket&&bucket.title.toLowerCase()==='today';
+  const enteredDue=$('cmDue').value||'';
+  t.due=enteredDue||(inTodayBucket?new Date().toISOString().slice(0,10):'');
+  if(inTodayBucket&&!enteredDue)$('cmDue').value=t.due; // reflect in field
+  const doneBucket=S.buckets.find(b=>b.title==='Done');
+  t.done=doneBucket?t.bucketId===doneBucket.id:false;
+  t.status=t.bucketId;
+  save();renderBoard();renderDash();closeCard();toast('Card saved','info',1800);
+}
 function archiveCard(){if(!confirm('Archive this card?'))return;S.tasks=S.tasks.filter(x=>x.id!==cardEditId);save();renderBoard();renderDash();closeCard();toast('Card archived','default',1800);}
 function closeCard(){$('cardOvl').classList.remove('on');cardEditId=null;}
 $('cardOvl').addEventListener('click',e=>{if(e.target===$('cardOvl'))closeCard();});
@@ -1649,7 +1680,21 @@ function saveAsTemplate(){const t=S.tasks.find(x=>x.id===cardEditId);if(!t)retur
 function dragStart(e,id){dragId=id;e.dataTransfer.effectAllowed='move';}
 function dragOver(e,bid){e.preventDefault();e.currentTarget.classList.add('drag-over');}
 function dragLeave(e){e.currentTarget.classList.remove('drag-over');}
-function dropCard(e,bid){e.preventDefault();e.currentTarget.classList.remove('drag-over');if(!dragId)return;const t=S.tasks.find(x=>x.id===dragId);if(t){t.bucketId=bid;t.status=bid;const doneBucket=S.buckets.find(b=>b.title==='Done');t.done=doneBucket?bid===doneBucket.id:false;}dragId=null;save();renderBoard();renderDash();}
+function dropCard(e,bid){
+  e.preventDefault();e.currentTarget.classList.remove('drag-over');if(!dragId)return;
+  const t=S.tasks.find(x=>x.id===dragId);
+  if(t){
+    t.bucketId=bid;t.status=bid;
+    const doneBucket=S.buckets.find(b=>b.title==='Done');
+    t.done=doneBucket?bid===doneBucket.id:false;
+    const bucket=S.buckets.find(b=>b.id===bid);
+    if(bucket&&bucket.title.toLowerCase()==='today'&&!t.due){
+      t.due=new Date().toISOString().slice(0,10);
+      toast('Due date set to today','info',2000);
+    }
+  }
+  dragId=null;save();renderBoard();renderDash();
+}
 
 // shims
 function renderKanban(){renderBoard();}
