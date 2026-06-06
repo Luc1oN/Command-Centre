@@ -503,6 +503,19 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .mode-indicator.personal .mi-dot{background:var(--green)}
 /* blocked card highlight */
 #wBlockedCard.has-blocked{background:color-mix(in srgb,var(--red) 8%,var(--surface));border-color:var(--red-bd)}
+/* PROJECT SIDEBAR ITEMS */
+.sb-proj-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--rs);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:background .12s,color .12s;position:relative}
+.sb-proj-item:hover{background:var(--surface2);color:var(--text)}
+.sb-proj-item.active{background:var(--surface3);color:var(--text);font-weight:600}
+.sb-proj-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sb-proj-icon{font-size:13px;flex-shrink:0}
+.sb-proj-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-proj-cnt{font-size:10px;font-weight:700;color:var(--text3);flex-shrink:0}
+/* colour swatch picker */
+.color-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s,border-color .1s}
+.color-swatch:hover,.color-swatch.sel{transform:scale(1.15);border-color:white}
+.icon-opt{font-size:18px;cursor:pointer;padding:3px 5px;border-radius:5px;border:2px solid transparent;transition:all .1s}
+.icon-opt:hover,.icon-opt.sel{background:var(--surface3);border-color:var(--border2)}
 /* UTILITIES */
 @keyframes riseUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -581,6 +594,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
       API Key
     </button>
 
+    <div class="sb-sec" style="margin-top:6px">Projects</div>
+    <div id="sbProjects"></div>
+    <button class="sb-item" onclick="newProject()" style="color:var(--blue);font-weight:600">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M5 8h6"/></svg>
+      New Project
+    </button>
+
     <div class="sb-sec" style="margin-top:6px">More</div>
     <button class="sb-item" id="nav-more" onclick="showPage('more')">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg>
@@ -615,7 +635,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="5.5" cy="5.5" r="4"/><path d="M9 9l3 3" stroke-linecap="round"/></svg>
         Search &amp; actions <kbd>⌘K</kbd>
       </button>
-      <div class="mode-indicator work" id="modeIndicator" onclick="setMode(currentMode==='work'?'personal':'work');showPage('dashboard')" title="Click to switch mode — goes to Dashboard" style="cursor:pointer">
+      <div class="mode-indicator work" id="modeIndicator" onclick="setMode(currentMode==='work'?'personal':'work')" title="Click to switch mode" style="cursor:pointer">
         <div class="mi-dot"></div>
         <span id="modeIndicatorTxt">Work</span>
       </div>
@@ -901,6 +921,30 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
     </div>
   </div>
 
+  <!-- ═══ PROJECT PAGE ═══ -->
+  <div class="page" id="page-project">
+    <div class="board-topbar">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+        <div id="projColorDot" style="width:12px;height:12px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px currentColor"></div>
+        <div id="projName" style="font-size:15px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px"></div>
+        <div class="board-filters">
+          <button class="fpill active" data-pf="all"     onclick="setPF('all',this)">All</button>
+          <button class="fpill"        data-pf="high"    onclick="setPF('high',this)">&#x1F534; High</button>
+          <button class="fpill"        data-pf="overdue" onclick="setPF('overdue',this)">&#x26A0; Overdue</button>
+          <button class="fpill"        data-pf="week"    onclick="setPF('week',this)">&#x1F4C5; This week</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;align-items:center;flex-shrink:0">
+        <button class="btn btn-g btn-sm" onclick="openProjSettings()">&#x2699; Settings</button>
+        <button class="btn btn-g btn-sm" onclick="openTemplateManager()">Templates</button>
+        <button class="btn btn-sm" onclick="addProjBucket()">+ Add List</button>
+      </div>
+    </div>
+    <div class="board-scroll">
+      <div class="board-cols" id="projCols"></div>
+    </div>
+  </div>
+
 </div><!-- /main -->
 </div><!-- /shell -->
 
@@ -1142,6 +1186,53 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
   </div>
 </div>
 
+<!-- PROJECT SETTINGS MODAL -->
+<div class="overlay" id="projSettingsOvl">
+  <div class="modal modal-sm">
+    <div class="mhead"><div class="mtitle" id="projSettingsTitle">Project Settings</div><button class="mx" onclick="projSettingsOvl.classList.remove('on')">&#x2715;</button></div>
+    <div class="mbody-inner">
+      <div class="fr"><div class="fl">Project Name</div><input class="fi" id="psName" type="text"/></div>
+      <div class="fr"><div class="fl">Description</div><input class="fi" id="psDesc" type="text" placeholder="What is this project for?"/></div>
+      <div class="fr">
+        <div class="fl">Colour</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:2px" id="psColorPicker"></div>
+      </div>
+      <div class="fr">
+        <div class="fl">Icon</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px" id="psIconPicker"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-g" onclick="deleteProject()" style="color:var(--red);margin-right:auto">Delete Project</button>
+      <button class="btn btn-g" onclick="projSettingsOvl.classList.remove('on')">Cancel</button>
+      <button class="btn" onclick="saveProjSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div class="overlay" id="newProjOvl">
+  <div class="modal modal-sm">
+    <div class="mhead"><div class="mtitle">New Project</div><button class="mx" onclick="newProjOvl.classList.remove('on')">&#x2715;</button></div>
+    <div class="mbody-inner">
+      <div class="fr"><div class="fl">Project Name</div><input class="fi" id="npName" type="text" placeholder="e.g. Network Upgrade, Q3 Planning…"/></div>
+      <div class="fr"><div class="fl">Description</div><input class="fi" id="npDesc" type="text" placeholder="What is this project for?"/></div>
+      <div class="fr">
+        <div class="fl">Colour</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:2px" id="npColorPicker"></div>
+      </div>
+      <div class="fr">
+        <div class="fl">Icon</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px" id="npIconPicker"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-g" onclick="newProjOvl.classList.remove('on')">Cancel</button>
+      <button class="btn" onclick="confirmNewProject()">Create Project</button>
+    </div>
+  </div>
+</div>
+
 <div id="toasts"></div>
 
 <script>
@@ -1264,7 +1355,7 @@ window.recoverTasks=function(){
 };
 
 // ── RENDER ALL ─────────────────────────────────────────────
-function renderAll(){renderDash();renderKanban();renderTennis();renderTrips();renderPack();renderNotes();checkStreak();renderXP();const p=S.tasks.filter(t=>!t.done).length;['pendBadge','taskBadge'].forEach(id=>{const e=$(id);if(e)e.textContent=p;});}
+function renderAll(){renderDash();renderKanban();renderTennis();renderTrips();renderPack();renderNotes();renderSbProjects();checkStreak();renderXP();const p=S.tasks.filter(t=>!t.done).length;['pendBadge','taskBadge'].forEach(id=>{const e=$(id);if(e)e.textContent=p;});}
 
 // ── DASHBOARD ──────────────────────────────────────────────
 function renderDash(){
@@ -1477,8 +1568,8 @@ function setMode(m){
   // legacy mode-personal / mode-work class selectors (launcher grids in More)
   document.querySelectorAll('.mode-personal').forEach(e=>e.style.display=isW?'none':'');
   document.querySelectorAll('.mode-work').forEach(e=>e.style.display=isW?'':'none');
-  // refresh board if visible
-  if(currentPage==='tasks')renderBoard();
+  // always re-render board so filter applies immediately regardless of current page
+  renderBoard();
   // update board mode label
   const bml=$('boardModeLabel');
   if(bml){
@@ -1742,9 +1833,9 @@ function saveEdit(){saveCard();}
 // ── PAGE SWITCHING ─────────────────────────────────────────
 function showPage(pg){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll(".sb-item,.sb-proj-item").forEach(b=>b.classList.remove('active'));
   const p=$(`page-${pg}`);if(p)p.classList.add('active');
-  const n=$(`nav-${pg}`);if(n)n.classList.add('active');
+  const n=$(`nav-${pg}`);if(n)n.classList.add("active");if(pg==="project"){const ap=document.querySelector(`.sb-proj-item[onclick*="${activeProjId}"]`);if(ap)ap.classList.add("active");}
   const titles={dashboard:'Dashboard',tasks:'Tasks',more:'More'};
   $('tbTitle').textContent=titles[pg]||pg;
   currentPage=pg;
@@ -1922,7 +2013,306 @@ function updCmd(){document.querySelectorAll('.cmd-item').forEach((el,i)=>{el.cla
 function cmdRun(idx){if(_cm[idx])_cm[idx].fn();}
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();$('cmdPal').classList.contains('on')?closeCmd():openCmd();}if(e.key==='Escape'&&$('cmdPal').classList.contains('on'))closeCmd();});
 
-// ── INIT ───────────────────────────────────────────────────
+// ── PROJECTS ENGINE ────────────────────────────────────────
+const PROJ_COLORS=['#4f8ef7','#a78bfa','#34d399','#fbbf24','#f87171','#f97316','#ec4899','#14b8a6','#6366f1','#84cc16'];
+const PROJ_ICONS=['📋','🚀','🔧','📊','🎯','💡','🏗️','📦','🔬','🌐','💼','🛠️','📱','⚙️','🎨'];
+const PROJ_DEFAULT_BUCKETS=[{title:'Backlog',color:'#6b7280'},{title:'To Do',color:'#4f8ef7'},{title:'In Progress',color:'#fbbf24'},{title:'Done',color:'#34d399'}];
+
+let activeProjId=null, projFilter='all', newProjColor=PROJ_COLORS[0], newProjIcon=PROJ_ICONS[0], editProjColor='', editProjIcon='';
+
+function initProjects(){
+  if(!S.projects)S.projects=[];
+}
+
+function renderSbProjects(){
+  initProjects();
+  const el=$('sbProjects');if(!el)return;
+  if(!S.projects.length){el.innerHTML='<div style="padding:4px 18px;font-size:11px;color:var(--text3)">No projects yet</div>';return;}
+  el.innerHTML=S.projects.map(p=>{
+    const active=activeProjId===p.id;
+    const pending=(p.tasks||[]).filter(t=>!t.done).length;
+    return`<button class="sb-proj-item ${active?'active':''}" onclick="openProject('${p.id}')">
+      <span class="sb-proj-icon">${p.icon||'📋'}</span>
+      <span class="sb-proj-name">${esc(p.name)}</span>
+      ${pending>0?`<span class="sb-proj-cnt">${pending}</span>`:''}
+    </button>`;
+  }).join('');
+}
+
+function openProject(id){
+  initProjects();
+  activeProjId=id;
+  const p=S.projects.find(x=>x.id===id);if(!p)return;
+  // init project buckets if empty
+  if(!p.buckets||!p.buckets.length) p.buckets=PROJ_DEFAULT_BUCKETS.map(b=>({...b,id:uid()}));
+  if(!p.tasks)p.tasks=[];
+  if(!p.labels)p.labels=JSON.parse(JSON.stringify(LABEL_PRESETS));
+  projFilter='all';
+  // reset filter pills
+  document.querySelectorAll('[data-pf]').forEach(b=>{b.classList.toggle('active',b.dataset.pf==='all');});
+  showPage('project');
+  // update topbar project name + colour
+  const nd=$('projName'),cd=$('projColorDot');
+  if(nd)nd.textContent=p.name;
+  if(cd){cd.style.background=p.color||'var(--blue)';cd.style.boxShadow=`0 0 8px ${p.color||'var(--blue)'}55`;}
+  $('tbTitle').textContent=p.name;
+  renderProjBoard();
+  renderSbProjects();
+}
+
+function setPF(f,btn){projFilter=f;document.querySelectorAll('[data-pf]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderProjBoard();}
+
+function applyProjFilter(tasks){
+  const today=new Date();today.setHours(0,0,0,0);const nextWeek=new Date(today);nextWeek.setDate(today.getDate()+7);
+  if(projFilter==='all')return tasks;
+  if(projFilter==='high')return tasks.filter(t=>t.pri==='high');
+  if(projFilter==='overdue')return tasks.filter(t=>t.due&&new Date(t.due+'T00:00:00')<today&&!t.done);
+  if(projFilter==='week')return tasks.filter(t=>t.due&&new Date(t.due+'T00:00:00')<=nextWeek&&new Date(t.due+'T00:00:00')>=today);
+  return tasks;
+}
+
+function renderProjBoard(){
+  const p=S.projects.find(x=>x.id===activeProjId);
+  const cols=$('projCols');if(!cols||!p)return;
+  cols.innerHTML='';
+  p.buckets.forEach(b=>{
+    const bTasks=applyProjFilter((p.tasks||[]).filter(t=>t.bucketId===b.id));
+    const col=document.createElement('div');col.className='bcol';col.dataset.bid=b.id;
+    col.innerHTML=`<div class="bcol-head">
+      <div class="bcol-dot" style="background:${b.color};position:relative" onclick="openProjDotPicker('${b.id}',this)"></div>
+      <div class="bcol-title-wrap"><div class="bcol-title" ondblclick="startRenameProjCol('${b.id}',this)">${esc(b.title)}</div></div>
+      <div class="bcol-cnt">${bTasks.length}</div>
+      <button class="bcol-menu-btn" onclick="projBucketMenu('${b.id}',this)">&#x22EF;</button>
+    </div>
+    <div class="bcol-cards" id="pcards-${b.id}" ondragover="dragOver(event,'${b.id}')" ondragleave="dragLeave(event)" ondrop="dropProjCard(event,'${b.id}')">${bTasks.map(t=>projCardHTML(t)).join('')}</div>
+    <div class="bcol-add-area">
+      <button class="bcol-add-trigger" id="ptrigger-${b.id}" onclick="openProjAdder('${b.id}')">+ Add a card</button>
+      <div class="bcol-adder" id="padder-${b.id}">
+        <textarea class="bcol-adder-inp" id="padderinp-${b.id}" rows="2" placeholder="Card title…" onkeydown="projAdderKey(event,'${b.id}')"></textarea>
+        <div class="bcol-adder-row">
+          <select class="bcol-adder-sel" id="padderpri-${b.id}"><option value="medium">Med</option><option value="high">High</option><option value="low">Low</option></select>
+          <button class="bcol-adder-tpl" onclick="openAdderTemplateProjContext('${b.id}')">Use template</button>
+          <div class="bcol-adder-btns"><button class="btn btn-sm" onclick="confirmProjAdder('${b.id}')">Add</button><button class="btn btn-g btn-sm" onclick="closeProjAdder('${b.id}')">&#x2715;</button></div>
+        </div>
+      </div>
+    </div>`;
+    cols.appendChild(col);
+  });
+  const ghost=document.createElement('div');ghost.className='bcol-ghost';ghost.onclick=addProjBucket;
+  ghost.innerHTML=`<div class="bcol-ghost-inner"><div style="font-size:22px;color:var(--text3)">+</div><div class="bcol-ghost-txt">Add a list</div></div>`;
+  cols.appendChild(ghost);
+}
+
+function projCardHTML(t){
+  const today=new Date();today.setHours(0,0,0,0);
+  const hasDue=!!t.due,dueDate=hasDue?new Date(t.due+'T00:00:00'):null,daysLeft=hasDue?Math.ceil((dueDate-today)/86400000):null;
+  let dueClass='ok',dueTxt='';
+  if(hasDue){if(t.done){dueClass='done';dueTxt=fmtD(t.due);}else if(daysLeft<0){dueClass='overdue';dueTxt=`${Math.abs(daysLeft)}d overdue`;}else if(daysLeft<=3){dueClass='soon';dueTxt=daysLeft===0?'Today':daysLeft===1?'Tomorrow':`${daysLeft}d`;}else{dueClass='ok';dueTxt=fmtD(t.due);}}
+  const cl=t.checklist||[],clDone=cl.filter(x=>x.done).length,clPct=cl.length?Math.round(clDone/cl.length*100):0;
+  const p=S.projects.find(x=>x.id===activeProjId);
+  const labels=(t.labels||[]).map(lid=>{const l=(p?.labels||[]).find(x=>x.id===lid);return l?`<span class="bcard-label" style="background:${l.color}" title="${esc(l.name)}"></span>`:''}).join('');
+  return`<div class="bcard ${t.done?'done':''} ${t.cover?'has-cover':''}" data-id="${t.id}" draggable="true" ondragstart="dragStartProj(event,'${t.id}')" onclick="openProjCard('${t.id}')">
+    ${t.cover?`<div class="bcard-cover" style="background:${t.cover}"></div>`:''}
+    <div class="bcard-body">
+      ${labels?`<div class="bcard-labels">${labels}</div>`:''}
+      <div class="bcard-title">${esc(t.text)}</div>
+      <div class="bcard-meta">
+        <span class="bcard-pri ${t.pri}">${t.pri}</span>
+        ${hasDue?`<span class="bcard-due ${dueClass}">&#x1F4C5; ${dueTxt}</span>`:''}
+        <div class="bcard-icons" style="margin-left:auto">${t.description?`<span class="bcard-icon">&#x1F4DD;</span>`:''}${cl.length?`<span class="bcard-icon">&#x2611; ${clDone}/${cl.length}</span>`:''}</div>
+      </div>
+      ${cl.length?`<div class="bcard-checklist-bar"><div class="bcard-cl-track"><div class="bcard-cl-fill" style="width:${clPct}%"></div></div><div class="bcard-cl-pct">${clPct}%</div></div>`:''}
+    </div>
+  </div>`;
+}
+
+// proj bucket management
+function addProjBucket(){const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;const name=prompt('List name:','New List');if(!name||!name.trim())return;if(!p.buckets)p.buckets=[];p.buckets.push({id:uid(),title:name.trim(),color:'#6b7280'});save();renderProjBoard();toast('List added','success');}
+function startRenameProjCol(bid,el){const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;const b=p.buckets.find(x=>x.id===bid);if(!b)return;const inp=document.createElement('input');inp.className='bcol-title-inp';inp.value=b.title;el.replaceWith(inp);inp.focus();inp.select();const commit=()=>{b.title=inp.value.trim()||b.title;save();renderProjBoard();};inp.addEventListener('blur',commit);inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commit();}if(e.key==='Escape')renderProjBoard();});}
+function openProjDotPicker(bid,dotEl){const existing=$('pDotPop');if(existing)existing.remove();const pop=document.createElement('div');pop.id='pDotPop';pop.className='dot-picker-pop';const COLS=['#6b7280','#4f8ef7','#34d399','#fbbf24','#f87171','#a78bfa','#f97316','#ec4899','#14b8a6','#ef4444'];pop.innerHTML=COLS.map(c=>`<div class="dot-swatch" style="background:${c}" onclick="setProjBucketColor('${bid}','${c}');document.getElementById('pDotPop')?.remove()"></div>`).join('');dotEl.appendChild(pop);setTimeout(()=>document.addEventListener('click',()=>pop.remove(),{once:true}),10);}
+function setProjBucketColor(bid,color){const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;const b=p.buckets.find(x=>x.id===bid);if(b){b.color=color;save();renderProjBoard();}}
+function projBucketMenu(bid,btn){
+  const existing=$('pBMenuPop');if(existing)existing.remove();
+  const pop=document.createElement('div');pop.id='pBMenuPop';
+  pop.style.cssText='position:fixed;z-index:300;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rs);box-shadow:var(--shm);min-width:160px;overflow:hidden';
+  const item=(txt,fn,danger)=>`<button onclick="(${fn})();document.getElementById('pBMenuPop')?.remove()" style="width:100%;text-align:left;padding:8px 11px;font-size:13px;background:none;border:none;cursor:pointer;font-family:inherit;color:${danger?'var(--red)':'var(--text)'};border-radius:4px;display:block" onmouseover="this.style.background='${danger?'var(--red-bg)':'var(--surface2)'}" onmouseout="this.style.background='none'">${txt}</button>`;
+  pop.innerHTML=`<div style="padding:4px">
+    ${item('Rename list',`()=>startRenameProjCol('${bid}',document.querySelector('.bcol[data-bid=\\'${bid}\\'] .bcol-title'))`)}
+    ${item('Archive done cards',`()=>archiveDoneInProjBucket('${bid}')`)}
+    ${item('&#x1F5D1; Delete list',`()=>deleteProjBucket('${bid}')`,true)}
+  </div>`;
+  const r=btn.getBoundingClientRect();pop.style.top=(r.bottom+4)+'px';pop.style.left=Math.min(r.left,window.innerWidth-170)+'px';
+  document.body.appendChild(pop);setTimeout(()=>document.addEventListener('click',()=>pop.remove(),{once:true}),10);
+}
+function deleteProjBucket(bid){const p=S.projects.find(x=>x.id===activeProjId);if(!p||!confirm('Delete this list?'))return;(p.tasks||[]).forEach(t=>{if(t.bucketId===bid)t.bucketId=p.buckets[0]?.id||bid;});p.buckets=p.buckets.filter(b=>b.id!==bid);save();renderProjBoard();toast('List deleted','default');}
+function archiveDoneInProjBucket(bid){const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;const n=(p.tasks||[]).filter(t=>t.bucketId===bid&&t.done).length;p.tasks=(p.tasks||[]).filter(t=>!(t.bucketId===bid&&t.done));save();renderProjBoard();if(n)toast(`Archived ${n} done card${n>1?'s':''}`, 'success');}
+
+// proj inline adder
+let activeProjAdder=null;
+function openProjAdder(bid){if(activeProjAdder&&activeProjAdder!==bid)closeProjAdder(activeProjAdder);activeProjAdder=bid;const t=$('ptrigger-'+bid),a=$('padder-'+bid);if(t)t.style.display='none';if(a)a.classList.add('open');setTimeout(()=>$('padderinp-'+bid)?.focus(),50);}
+function closeProjAdder(bid){activeProjAdder=null;const t=$('ptrigger-'+bid),a=$('padder-'+bid);if(t)t.style.display='';if(a)a.classList.remove('open');const inp=$('padderinp-'+bid);if(inp)inp.value='';}
+function projAdderKey(e,bid){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();confirmProjAdder(bid);}if(e.key==='Escape')closeProjAdder(bid);}
+function confirmProjAdder(bid){
+  const inp=$('padderinp-'+bid),txt=inp?.value.trim();if(!txt)return;
+  const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;
+  if(!p.tasks)p.tasks=[];
+  const bucket=p.buckets.find(b=>b.id===bid);
+  const autoToday=bucket&&bucket.title.toLowerCase()==='today';
+  const adderEl=$('padder-'+bid);const tplId=adderEl?.dataset.tplId;
+  const allTpls=[...BUILTIN_TEMPLATES,...(S.templates||[])];const tpl=tplId?allTpls.find(x=>x.id===tplId):null;
+  p.tasks.push({id:uid(),text:txt,pri:$('padderpri-'+bid)?.value||'medium',bucketId:bid,status:bid,src:'Manual',due:autoToday?new Date().toISOString().slice(0,10):'',done:false,checklist:tpl?tpl.checklist.map(c=>({id:uid(),text:c,done:false})):[],labels:[],at:new Date().toISOString()});
+  if(adderEl)delete adderEl.dataset.tplId;
+  save();renderProjBoard();renderSbProjects();closeProjAdder(bid);toast('Card added','success');earnXP(2,'Card created');
+}
+function openAdderTemplateProjContext(bid){
+  const allTpls=[...BUILTIN_TEMPLATES,...(S.templates||[])];if(!allTpls.length){toast('No templates yet','info');return;}
+  const sel=document.createElement('select');sel.style.cssText='position:fixed;z-index:400;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rs);padding:6px 8px;font-family:inherit;font-size:12px;color:var(--text);box-shadow:var(--shm)';
+  sel.innerHTML='<option value="">— choose template —</option>'+allTpls.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  const btn=document.querySelector(`#padder-${bid} .bcol-adder-tpl`);const r=btn.getBoundingClientRect();sel.style.top=(r.bottom+4)+'px';sel.style.left=r.left+'px';
+  document.body.appendChild(sel);sel.focus();
+  sel.addEventListener('change',()=>{const tpl=allTpls.find(t=>t.id===sel.value);if(tpl){const inp=$('padderinp-'+bid);if(inp)inp.value=tpl.name;const a=$('padder-'+bid);if(a)a.dataset.tplId=tpl.id;}sel.remove();});
+  sel.addEventListener('blur',()=>setTimeout(()=>sel.remove(),200));
+}
+
+// proj card modal — reuses the shared card modal, but context-aware
+let projCardEditId=null;
+function openProjCard(id){
+  const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;
+  projCardEditId=id;cardEditId=null; // signal: proj context
+  const t=(p.tasks||[]).find(x=>x.id===id);if(!t)return;
+  // reuse card modal with proj context flag
+  const cmCover=$('cmCover');cmCover.style.background=t.cover||'var(--surface3)';cmCover.style.height=t.cover?'44px':'6px';
+  $('cmCoverPicker').innerHTML=COVER_COLORS.map(c=>`<div class="cm-cover-swatch ${t.cover===c?'active':''}" style="background:${c||'var(--border2)'};${!c?'border:1px dashed rgba(255,255,255,.5)':''}" onclick="setProjCardCover('${c}')"></div>`).join('');
+  const ta=$('cmTitle');ta.value=t.text||'';setTimeout(()=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';},0);
+  $('cmDesc').value=t.description||'';$('cmDue').value=t.due||'';$('cmPri').value=t.pri||'medium';
+  // bucket select from project buckets
+  const bs=$('cmBucket');bs.innerHTML=p.buckets.map(b=>`<option value="${b.id}" ${t.bucketId===b.id?'selected':''}>${esc(b.title)}</option>`).join('');
+  // hide cat field (projects aren't work/personal filtered)
+  const catField=$('cmCat')?.closest('.cm-field');if(catField)catField.style.display='none';
+  // labels from project
+  renderProjCardLabels(t,p);renderProjCardLabelDisplay(t,p);
+  renderCardChecklist(t);$('cmClInp').value='';
+  $('cardOvl').classList.add('on');
+}
+function setProjCardCover(color){
+  const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;
+  const t=(p.tasks||[]).find(x=>x.id===projCardEditId);if(!t)return;
+  t.cover=color;const c=$('cmCover');c.style.background=color||'var(--surface3)';c.style.height=color?'44px':'6px';
+  $('cmCoverPicker').innerHTML=COVER_COLORS.map(x=>`<div class="cm-cover-swatch ${t.cover===x?'active':''}" style="background:${x||'var(--border2)'};${!x?'border:1px dashed rgba(255,255,255,.5)':''}" onclick="setProjCardCover('${x}')"></div>`).join('');
+  save();renderProjBoard();
+}
+function renderProjCardLabels(t,p){const g=$('cmLabelsGrid');if(!g)return;g.innerHTML=(p.labels||[]).map(l=>{const on=(t.labels||[]).includes(l.id);return`<div class="cm-label-row" onclick="toggleProjCardLabel('${l.id}')"><div class="cm-label-swatch" style="background:${l.color}"></div><div class="cm-label-name">${esc(l.name)}</div><div class="cm-label-check ${on?'on':''}">${on?'<svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.2 5.8L8 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div></div>`;}).join('');}
+function renderProjCardLabelDisplay(t,p){const el=$('cmLabelDisplay');if(!el)return;el.innerHTML=(t.labels||[]).map(lid=>{const l=(p.labels||[]).find(x=>x.id===lid);return l?`<span style="display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:${l.color};color:white;margin-right:3px">${esc(l.name)}</span>`:''}).join('');}
+function toggleProjCardLabel(lid){const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;const t=(p.tasks||[]).find(x=>x.id===projCardEditId);if(!t)return;if(!t.labels)t.labels=[];const idx=t.labels.indexOf(lid);if(idx>=0)t.labels.splice(idx,1);else t.labels.push(lid);renderProjCardLabels(t,p);renderProjCardLabelDisplay(t,p);}
+
+// override saveCard and archiveCard to be context-aware
+const _origSaveCard=saveCard;
+window.saveCard=function(){
+  if(projCardEditId){
+    const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;
+    const t=(p.tasks||[]).find(x=>x.id===projCardEditId);if(!t)return;
+    t.text=$('cmTitle').value.trim()||t.text;t.description=$('cmDesc').value.trim();t.pri=$('cmPri').value;
+    t.bucketId=$('cmBucket').value;
+    const bucket=p.buckets.find(b=>b.id===t.bucketId);
+    const inToday=bucket&&bucket.title.toLowerCase()==='today';
+    const enteredDue=$('cmDue').value||'';
+    t.due=enteredDue||(inToday?new Date().toISOString().slice(0,10):'');
+    const doneBucket=p.buckets.find(b=>b.title==='Done');t.done=doneBucket?t.bucketId===doneBucket.id:false;
+    t.status=t.bucketId;
+    const catField=$('cmCat')?.closest('.cm-field');if(catField)catField.style.display='';
+    save();renderProjBoard();renderSbProjects();
+    projCardEditId=null;closeCard();toast('Card saved','info',1800);
+  } else { _origSaveCard(); }
+};
+const _origArchiveCard=archiveCard;
+window.archiveCard=function(){
+  if(projCardEditId){
+    if(!confirm('Archive this card?'))return;
+    const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;
+    p.tasks=(p.tasks||[]).filter(x=>x.id!==projCardEditId);
+    const catField=$('cmCat')?.closest('.cm-field');if(catField)catField.style.display='';
+    save();renderProjBoard();renderSbProjects();
+    projCardEditId=null;closeCard();toast('Card archived','default',1800);
+  } else { _origArchiveCard(); }
+};
+// also patch closeCard to restore cat field
+const _origCloseCard=closeCard;
+window.closeCard=function(){
+  const catField=$('cmCat')?.closest('.cm-field');if(catField)catField.style.display='';
+  projCardEditId=null;
+  _origCloseCard();
+};
+
+// drag & drop for project board
+let dragProjId=null;
+function dragStartProj(e,id){dragProjId=id;e.dataTransfer.effectAllowed='move';}
+function dropProjCard(e,bid){
+  e.preventDefault();e.currentTarget.classList.remove('drag-over');if(!dragProjId)return;
+  const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;
+  const t=(p.tasks||[]).find(x=>x.id===dragProjId);
+  if(t){
+    t.bucketId=bid;t.status=bid;
+    const doneBucket=p.buckets.find(b=>b.title==='Done');t.done=doneBucket?bid===doneBucket.id:false;
+    const bucket=p.buckets.find(b=>b.id===bid);
+    if(bucket&&bucket.title.toLowerCase()==='today'&&!t.due){t.due=new Date().toISOString().slice(0,10);toast('Due date set to today','info',2000);}
+  }
+  dragProjId=null;save();renderProjBoard();renderSbProjects();
+}
+
+// project CRUD
+function newProject(){
+  newProjColor=PROJ_COLORS[S.projects?.length%PROJ_COLORS.length||0];
+  newProjIcon=PROJ_ICONS[0];
+  $('npName').value='';$('npDesc').value='';
+  renderColorPicker('npColorPicker',PROJ_COLORS,(c)=>{newProjColor=c;},newProjColor);
+  renderIconPicker('npIconPicker',PROJ_ICONS,(i)=>{newProjIcon=i;},newProjIcon);
+  $('newProjOvl').classList.add('on');
+  setTimeout(()=>$('npName').focus(),100);
+}
+function confirmNewProject(){
+  const name=$('npName').value.trim();if(!name){toast('Enter a project name','error');return;}
+  initProjects();
+  const p={id:uid(),name,desc:$('npDesc').value.trim(),color:newProjColor,icon:newProjIcon,buckets:PROJ_DEFAULT_BUCKETS.map(b=>({...b,id:uid()})),tasks:[],labels:JSON.parse(JSON.stringify(LABEL_PRESETS))};
+  S.projects.push(p);save();renderSbProjects();
+  $('newProjOvl').classList.remove('on');
+  toast(`Project "${name}" created`,'success');
+  openProject(p.id);
+}
+function openProjSettings(){
+  const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;
+  editProjColor=p.color||PROJ_COLORS[0];editProjIcon=p.icon||PROJ_ICONS[0];
+  $('psName').value=p.name;$('psDesc').value=p.desc||'';
+  $('projSettingsTitle').textContent=`Settings: ${p.name}`;
+  renderColorPicker('psColorPicker',PROJ_COLORS,(c)=>{editProjColor=c;},editProjColor);
+  renderIconPicker('psIconPicker',PROJ_ICONS,(i)=>{editProjIcon=i;},editProjIcon);
+  $('projSettingsOvl').classList.add('on');
+}
+function saveProjSettings(){
+  const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;
+  p.name=$('psName').value.trim()||p.name;p.desc=$('psDesc').value.trim();p.color=editProjColor;p.icon=editProjIcon;
+  save();renderSbProjects();
+  const nd=$('projName'),cd=$('projColorDot');
+  if(nd)nd.textContent=p.name;if(cd){cd.style.background=p.color;cd.style.boxShadow=`0 0 8px ${p.color}55`;}
+  $('tbTitle').textContent=p.name;
+  $('projSettingsOvl').classList.remove('on');toast('Project updated','success');
+}
+function deleteProject(){
+  const p=S.projects.find(x=>x.id===activeProjId);if(!p)return;
+  if(!confirm(`Delete "${p.name}"? This cannot be undone.`))return;
+  S.projects=S.projects.filter(x=>x.id!==activeProjId);activeProjId=null;
+  save();renderSbProjects();$('projSettingsOvl').classList.remove('on');
+  showPage('dashboard');toast('Project deleted','default');
+}
+
+// colour / icon picker helpers
+function renderColorPicker(containerId,colors,onSelect,selected){
+  const el=$(containerId);if(!el)return;
+  el.innerHTML=colors.map(c=>`<div class="color-swatch ${selected===c?'sel':''}" style="background:${c}" onclick="this.parentNode.querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('sel'));this.classList.add('sel');(${onSelect.toString()})('${c}')"></div>`).join('');
+}
+function renderIconPicker(containerId,icons,onSelect,selected){
+  const el=$(containerId);if(!el)return;
+  el.innerHTML=icons.map(i=>`<span class="icon-opt ${selected===i?'sel':''}" onclick="this.parentNode.querySelectorAll('.icon-opt').forEach(x=>x.classList.remove('sel'));this.classList.add('sel');(${onSelect.toString()})('${i}')">${i}</span>`).join('');
+}
 setMode(currentMode);
 renderXP();
 loadData();
