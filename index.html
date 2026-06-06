@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -791,7 +791,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
     </div>
     <div class="dark-row">
       <span class="dark-lbl">Dark mode</span>
-      <button class="tog on" id="darkTog" onclick="toggleDark()"></button>
+      <button class="tog" id="darkTog" onclick="toggleDark()"></button>
     </div>
   </div>
 </aside>
@@ -1525,7 +1525,7 @@ const $=id=>document.getElementById(id);
 // ── STATE ──────────────────────────────────────────────────
 let S={tasks:[],notes:[],tennis:[],trips:[]};
 let saveTimer=null,currentMode=localStorage.getItem('dashMode')||'personal';
-let isDark=localStorage.getItem('cmdDark')!=='0';
+let isDark=localStorage.getItem('cmdDark')==='1';
 let kFilter='all',editingId=null,pending=[],ssB64=null,aeFilter='all',activeTripId=null;
 
 // ── XP ─────────────────────────────────────────────────────
