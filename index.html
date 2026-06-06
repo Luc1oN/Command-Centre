@@ -823,12 +823,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
   <div class="page" id="page-tasks">
     <div class="board-topbar">
       <div class="board-filters" id="boardFilters">
-        <button class="fpill active" data-ff="all" onclick="setBF('all',this)">All</button>
-        <button class="fpill" data-ff="high"       onclick="setBF('high',this)">&#x1F534; High</button>
-        <button class="fpill" data-ff="overdue"    onclick="setBF('overdue',this)">&#x26A0; Overdue</button>
-        <button class="fpill" data-ff="week"       onclick="setBF('week',this)">&#x1F4C5; This week</button>
-        <button class="fpill" data-ff="work"       onclick="setBF('work',this)">Work</button>
-        <button class="fpill" data-ff="personal"   onclick="setBF('personal',this)">Personal</button>
+        <span id="boardModeLabel" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;margin-right:2px"></span>
+        <button class="fpill active" data-ff="all"     onclick="setBF('all',this)">All</button>
+        <button class="fpill" data-ff="high"           onclick="setBF('high',this)">&#x1F534; High</button>
+        <button class="fpill" data-ff="overdue"        onclick="setBF('overdue',this)">&#x26A0; Overdue</button>
+        <button class="fpill" data-ff="week"           onclick="setBF('week',this)">&#x1F4C5; This week</button>
         <div id="labelFilters" style="display:contents"></div>
       </div>
       <div style="display:flex;gap:7px;align-items:center;flex-shrink:0">
@@ -1478,6 +1477,16 @@ function setMode(m){
   // legacy mode-personal / mode-work class selectors (launcher grids in More)
   document.querySelectorAll('.mode-personal').forEach(e=>e.style.display=isW?'none':'');
   document.querySelectorAll('.mode-work').forEach(e=>e.style.display=isW?'':'none');
+  // refresh board if visible
+  if(currentPage==='tasks')renderBoard();
+  // update board mode label
+  const bml=$('boardModeLabel');
+  if(bml){
+    bml.textContent=isW?'💼 Work':'🏠 Personal';
+    bml.style.cssText=isW
+      ?'font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--blue-glow);border:1px solid color-mix(in srgb,var(--blue) 40%,transparent);color:var(--blue)'
+      :'font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--green-bg);border:1px solid var(--green-bd);color:var(--green)';
+  }
   // re-render dashboard for this mode
   renderDash();
 }
@@ -1508,13 +1517,16 @@ let boardFilter='all',cardEditId=null,activeBucketAdder=null,dragId=null;
 function setBF(f,btn){boardFilter=f;document.querySelectorAll('[data-ff]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderBoard();}
 
 function applyBoardFilter(tasks){
+  // always scope to current mode first
+  const modeTasks=tasks.filter(t=>t.cat===currentMode);
   const today=new Date();today.setHours(0,0,0,0);const nextWeek=new Date(today);nextWeek.setDate(today.getDate()+7);
-  if(boardFilter==='all')return tasks;if(boardFilter==='high')return tasks.filter(t=>t.pri==='high');
-  if(boardFilter==='overdue')return tasks.filter(t=>t.due&&new Date(t.due+'T00:00:00')<today&&!t.done);
-  if(boardFilter==='week')return tasks.filter(t=>t.due&&new Date(t.due+'T00:00:00')<=nextWeek&&new Date(t.due+'T00:00:00')>=today);
-  if(boardFilter==='work')return tasks.filter(t=>t.cat==='work');if(boardFilter==='personal')return tasks.filter(t=>t.cat==='personal');
-  if(boardFilter.startsWith('label:')){const lid=boardFilter.slice(6);return tasks.filter(t=>(t.labels||[]).includes(lid));}
-  return tasks;
+  if(boardFilter==='all')return modeTasks;
+  if(boardFilter==='high')return modeTasks.filter(t=>t.pri==='high');
+  if(boardFilter==='overdue')return modeTasks.filter(t=>t.due&&new Date(t.due+'T00:00:00')<today&&!t.done);
+  if(boardFilter==='week')return modeTasks.filter(t=>t.due&&new Date(t.due+'T00:00:00')<=nextWeek&&new Date(t.due+'T00:00:00')>=today);
+  if(boardFilter==='work'||boardFilter==='personal')return modeTasks; // mode already handles this
+  if(boardFilter.startsWith('label:')){const lid=boardFilter.slice(6);return modeTasks.filter(t=>(t.labels||[]).includes(lid));}
+  return modeTasks;
 }
 
 function renderBoard(){
@@ -1735,7 +1747,19 @@ function showPage(pg){
   const n=$(`nav-${pg}`);if(n)n.classList.add('active');
   const titles={dashboard:'Dashboard',tasks:'Tasks',more:'More'};
   $('tbTitle').textContent=titles[pg]||pg;
-  if(pg==='tasks')renderBoard();
+  currentPage=pg;
+  if(pg==='tasks'){
+    renderBoard();
+    // sync board mode label
+    const bml=$('boardModeLabel');
+    if(bml){
+      const isW=currentMode==='work';
+      bml.textContent=isW?'💼 Work':'🏠 Personal';
+      bml.style.cssText=isW
+        ?'font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--blue-glow);border:1px solid color-mix(in srgb,var(--blue) 40%,transparent);color:var(--blue)'
+        :'font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--green-bg);border:1px solid var(--green-bd);color:var(--green)';
+    }
+  }
 }
 
 // ── BRAIN DUMP ─────────────────────────────────────────────
