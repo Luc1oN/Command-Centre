@@ -516,6 +516,45 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .color-swatch:hover,.color-swatch.sel{transform:scale(1.15);border-color:white}
 .icon-opt{font-size:18px;cursor:pointer;padding:3px 5px;border-radius:5px;border:2px solid transparent;transition:all .1s}
 .icon-opt:hover,.icon-opt.sel{background:var(--surface3);border-color:var(--border2)}
+/* ── DAILY CHECK-IN MODAL ── */
+.checkin-modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:500px;box-shadow:var(--shl);animation:modalIn .22s cubic-bezier(.34,1.56,.64,1);max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+.checkin-step{display:none;flex-direction:column;flex:1}
+.checkin-step.active{display:flex}
+.checkin-progress{display:flex;gap:5px;padding:16px 20px 0}
+.ci-pip{height:3px;flex:1;border-radius:99px;background:var(--border2);transition:background .3s}
+.ci-pip.done{background:var(--blue)}
+.ci-head{padding:18px 20px 10px}
+.ci-icon{font-size:26px;margin-bottom:6px}
+.ci-title{font-size:16px;font-weight:800;letter-spacing:-.4px}
+.ci-sub{font-size:12px;color:var(--text3);margin-top:3px}
+.ci-body{padding:0 20px;overflow-y:auto;flex:1}
+.ci-foot{padding:14px 20px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-shrink:0}
+.ci-skip{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px}
+.ci-skip:hover{color:var(--text)}
+/* yesterday completions */
+.ci-done-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--rs);background:var(--green-bg);border:1px solid var(--green-bd);margin-bottom:6px}
+.ci-done-check{color:var(--green);font-size:14px;flex-shrink:0}
+.ci-done-text{font-size:13px;color:var(--text);font-weight:500}
+/* pin tasks */
+.ci-pin-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface2);margin-bottom:6px;cursor:pointer;transition:all .12s}
+.ci-pin-item:hover{border-color:var(--blue);background:var(--blue-glow)}
+.ci-pin-item.pinned{border-color:var(--blue);background:var(--blue-glow)}
+.ci-pin-box{width:18px;height:18px;border-radius:4px;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ci-pin-item.pinned .ci-pin-box{background:var(--blue);border-color:var(--blue)}
+.ci-pin-text{flex:1;font-size:13px;font-weight:500;color:var(--text)}
+.ci-pin-meta{font-size:10px;color:var(--text3)}
+/* blocker input */
+.ci-blocker-inp{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rs);padding:9px 11px;font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:border-color .15s;margin-bottom:8px}
+.ci-blocker-inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+.ci-blocker-inp::placeholder{color:var(--text3)}
+.ci-blocker-list{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.ci-blocker-tag{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--red-bg);border:1px solid var(--red-bd);border-radius:var(--rs)}
+.ci-blocker-tag-text{flex:1;font-size:12px;color:var(--red);font-weight:500}
+.ci-blocker-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0 2px}
+/* pinned indicator on focus cards */
+.fc-pin{font-size:11px;flex-shrink:0;opacity:.7}
+/* recur badge on cards */
+.recur-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;background:var(--purple-bg);border:1px solid var(--purple-bd);color:var(--purple);white-space:nowrap}
 /* UTILITIES */
 @keyframes riseUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -1289,6 +1328,17 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
           <div class="cm-field-lbl">Due Date</div>
           <input class="cm-date" id="cmDue" type="date"/>
         </div>
+        <!-- Recurring -->
+        <div class="cm-field">
+          <div class="cm-field-lbl">Repeat</div>
+          <select class="cm-sel" id="cmRecur">
+            <option value="">No repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekdays">Weekdays (Mon–Fri)</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
         <!-- Labels -->
         <div class="cm-field">
           <div class="cm-field-lbl">Labels</div>
@@ -1368,6 +1418,63 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
     <div class="mfoot">
       <button class="btn btn-g" onclick="newProjOvl.classList.remove('on')">Cancel</button>
       <button class="btn" onclick="confirmNewProject()">Create Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- DAILY CHECK-IN MODAL -->
+<div class="overlay" id="checkinOvl">
+  <div class="checkin-modal">
+    <div class="checkin-progress">
+      <div class="ci-pip done" id="cipip1"></div>
+      <div class="ci-pip" id="cipip2"></div>
+      <div class="ci-pip" id="cipip3"></div>
+    </div>
+
+    <!-- STEP 1: Yesterday -->
+    <div class="checkin-step active" id="cistep1">
+      <div class="ci-head">
+        <div class="ci-icon">☀️</div>
+        <div class="ci-title" id="ciGreet">Good morning, Shane</div>
+        <div class="ci-sub">Here's what you completed yesterday</div>
+      </div>
+      <div class="ci-body" id="ciYesterdayList" style="padding-bottom:12px"></div>
+      <div class="ci-foot">
+        <button class="ci-skip" onclick="skipCheckin()">Skip for today</button>
+        <button class="btn" onclick="ciNext(2)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Pin today's focus -->
+    <div class="checkin-step" id="cistep2">
+      <div class="ci-head">
+        <div class="ci-icon">🎯</div>
+        <div class="ci-title">What are your top 3 for today?</div>
+        <div class="ci-sub">Pick up to 3 tasks to pin to your focus strip</div>
+      </div>
+      <div class="ci-body" id="ciPinList" style="padding-bottom:12px"></div>
+      <div class="ci-foot">
+        <button class="ci-skip" onclick="ciNext(1)">← Back</button>
+        <button class="btn" onclick="ciNext(3)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Blockers -->
+    <div class="checkin-step" id="cistep3">
+      <div class="ci-head">
+        <div class="ci-icon">⊘</div>
+        <div class="ci-title">Any blockers?</div>
+        <div class="ci-sub">Anything stopping progress? We'll create a blocked card for each.</div>
+      </div>
+      <div class="ci-body" style="padding-bottom:12px">
+        <div class="ci-blocker-list" id="ciBlockerList"></div>
+        <input class="ci-blocker-inp" id="ciBlockerInp" type="text" placeholder="Describe a blocker… press Enter to add"/>
+        <div style="font-size:11px;color:var(--text3)">Leave empty if no blockers — this is optional.</div>
+      </div>
+      <div class="ci-foot">
+        <button class="ci-skip" onclick="ciNext(2)">← Back</button>
+        <button class="btn" onclick="finishCheckin()" style="background:var(--green)">Done — Let's go ✓</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1500,6 +1607,7 @@ async function loadData(){
     showSync('synced');
   }catch{showSync('offline');}
   renderAll();
+  checkRecurringOnLoad();
 }
 function save(){try{localStorage.setItem(LOCAL_K,JSON.stringify(S));}catch{}clearTimeout(saveTimer);saveTimer=setTimeout(saveRemote,800);}
 async function saveRemote(){
@@ -2481,6 +2589,296 @@ function renderIconPicker(containerId,icons,onSelect,selected){
   el.innerHTML=icons.map(i=>`<span class="icon-opt ${selected===i?'sel':''}" onclick="this.parentNode.querySelectorAll('.icon-opt').forEach(x=>x.classList.remove('sel'));this.classList.add('sel');(${onSelect.toString()})('${i}')">${i}</span>`).join('');
 }
 
+// ── DAILY CHECK-IN ─────────────────────────────────────────
+const CHECKIN_K='cmdcentre_checkin';
+let ciPinned=[],ciBlockers=[],ciStep=1;
+
+function shouldShowCheckin(){
+  try{
+    const last=localStorage.getItem(CHECKIN_K);
+    const today=new Date().toDateString();
+    return last!==today;
+  }catch{return false;}
+}
+
+function markCheckinDone(){
+  localStorage.setItem(CHECKIN_K,new Date().toDateString());
+}
+
+function openCheckin(){
+  ciPinned=XD.pinnedToday||[];ciBlockers=[];ciStep=1;
+
+  // greeting
+  const hr=new Date().getHours();
+  const g=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  $('ciGreet').textContent=`${g}, Shane`;
+
+  // step 1: yesterday's completions
+  const yest=new Date(Date.now()-86400000).toDateString();
+  const yDone=S.tasks.filter(t=>{
+    if(!t.done||!t.at)return false;
+    return new Date(t.at).toDateString()===yest;
+  });
+  const ciYL=$('ciYesterdayList');
+  if(yDone.length){
+    ciYL.innerHTML=yDone.slice(0,8).map(t=>`
+      <div class="ci-done-item">
+        <span class="ci-done-check">✓</span>
+        <span class="ci-done-text">${esc(t.text)}</span>
+      </div>`).join('')+
+      (yDone.length>8?`<div style="font-size:11px;color:var(--text3);padding:4px 10px">+ ${yDone.length-8} more</div>`:'');
+  } else {
+    ciYL.innerHTML=`<div style="padding:16px 0;text-align:center;font-size:13px;color:var(--text3)">Nothing completed yesterday.<br>Today's a fresh start. 💪</div>`;
+  }
+
+  // step 2: pin tasks — active tasks for current mode
+  renderCIPinList();
+
+  ciGoTo(1);
+  $('checkinOvl').classList.add('on');
+}
+
+function renderCIPinList(){
+  const active=S.tasks.filter(t=>!t.done&&t.cat===currentMode);
+  const sorted=[...active.filter(t=>t.pri==='high'),...active.filter(t=>t.pri==='medium'),...active.filter(t=>t.pri==='low')].slice(0,12);
+  const el=$('ciPinList');
+  if(!sorted.length){el.innerHTML=`<div style="padding:16px 0;text-align:center;font-size:13px;color:var(--text3)">No active tasks to pin.<br>Add tasks first.</div>`;return;}
+  el.innerHTML=sorted.map(t=>{
+    const pinned=ciPinned.includes(t.id);
+    return`<div class="ci-pin-item ${pinned?'pinned':''}" onclick="toggleCiPin('${t.id}')">
+      <div class="ci-pin-box">${pinned?'<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+      <span class="ci-pin-text">${esc(t.text)}</span>
+      <span class="ci-pin-meta">${t.pri}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleCiPin(id){
+  if(ciPinned.includes(id)){
+    ciPinned=ciPinned.filter(x=>x!==id);
+  } else {
+    if(ciPinned.length>=3){toast('Max 3 tasks for today\'s focus','error',2000);return;}
+    ciPinned.push(id);
+  }
+  renderCIPinList();
+}
+
+function ciNext(step){ciGoTo(step);}
+
+function ciGoTo(step){
+  ciStep=step;
+  document.querySelectorAll('.checkin-step').forEach(s=>s.classList.remove('active'));
+  $(`cistep${step}`)?.classList.add('active');
+  // update progress pips
+  for(let i=1;i<=3;i++) $(`cipip${i}`)?.classList.toggle('done',i<=step);
+  // focus blocker input on step 3
+  if(step===3) setTimeout(()=>$('ciBlockerInp')?.focus(),100);
+}
+
+// blocker input
+function setupBlockerInput(){
+  const inp=$('ciBlockerInp');
+  if(!inp)return;
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const txt=inp.value.trim();if(!txt)return;
+      ciBlockers.push(txt);inp.value='';
+      renderCiBlockers();
+    }
+  });
+}
+
+function renderCiBlockers(){
+  $('ciBlockerList').innerHTML=ciBlockers.map((b,i)=>`
+    <div class="ci-blocker-tag">
+      <span class="ci-blocker-tag-text">⊘ ${esc(b)}</span>
+      <button class="ci-blocker-del" onclick="ciBlockers.splice(${i},1);renderCiBlockers()">✕</button>
+    </div>`).join('');
+}
+
+// also add any text in the input when finishing
+function finishCheckin(){
+  const inp=$('ciBlockerInp');
+  if(inp?.value.trim())ciBlockers.push(inp.value.trim());
+
+  // save pinned tasks for today's focus
+  XD.pinnedToday=ciPinned;
+  XD.lastCheckinDate=new Date().toDateString();
+  saveXP();
+
+  // create blocked cards for each blocker
+  initBoard();
+  ciBlockers.forEach(b=>{
+    const blockedBucket=S.buckets.find(bk=>bk.title==='Blocked')||S.buckets.find(bk=>bk.id==='blocked');
+    S.tasks.push({
+      id:uid(),text:b,pri:'high',cat:currentMode,
+      bucketId:blockedBucket?.id||'blocked',
+      status:'blocked',src:'Check-in',done:false,
+      checklist:[],labels:[],at:new Date().toISOString()
+    });
+  });
+
+  if(ciBlockers.length)save();
+
+  markCheckinDone();
+  $('checkinOvl').classList.remove('on');
+  renderAll();
+
+  // XP for completing check-in
+  earnXP(15,'Daily check-in complete');
+  toast(`Day planned 🎯${ciPinned.length?` — ${ciPinned.length} task${ciPinned.length>1?'s':''} pinned`:''}${ciBlockers.length?` · ${ciBlockers.length} blocker${ciBlockers.length>1?'s':''} logged`:''}`, 'success', 3500);
+}
+
+function skipCheckin(){
+  markCheckinDone();
+  $('checkinOvl').classList.remove('on');
+}
+
+// ── RECURRING TASKS ─────────────────────────────────────────
+const RECUR_LABELS={daily:'Daily',weekdays:'Weekdays',weekly:'Weekly',monthly:'Monthly'};
+
+function nextDueDate(fromDateStr, recur){
+  const d=fromDateStr?new Date(fromDateStr+'T00:00:00'):new Date();
+  if(recur==='daily'){d.setDate(d.getDate()+1);}
+  else if(recur==='weekdays'){
+    // advance past weekends
+    do{d.setDate(d.getDate()+1);}while(d.getDay()===0||d.getDay()===6);
+  }
+  else if(recur==='weekly'){d.setDate(d.getDate()+7);}
+  else if(recur==='monthly'){d.setMonth(d.getMonth()+1);}
+  return d.toISOString().slice(0,10);
+}
+
+function spawnRecurringClone(task){
+  // find the bucket for the clone — same bucket as parent, or todo
+  const targetBucketId=task.bucketId||'todo';
+  const clone={
+    ...task,
+    id:uid(),
+    done:false,
+    at:new Date().toISOString(),
+    due:nextDueDate(task.due||null, task.recur),
+    bucketId:targetBucketId,
+    status:targetBucketId,
+    checklist:(task.checklist||[]).map(item=>({...item,id:uid(),done:false})),
+    // don't inherit doneAt
+  };
+  delete clone.doneAt;
+  S.tasks.push(clone);
+}
+
+function checkRecurringOnLoad(){
+  // on load: ensure all recurring tasks have a future instance
+  const today=new Date().toISOString().slice(0,10);
+  const recurTasks=S.tasks.filter(t=>t.recur&&!t.done);
+  recurTasks.forEach(t=>{
+    if(!t.due||t.due<today){
+      // task is overdue and not done — update due to today if it's in the past
+      // (don't spawn; the task itself is still active)
+    }
+  });
+  // check for recurring tasks that were completed — if no future clone exists, create one
+  const doneTasks=S.tasks.filter(t=>t.recur&&t.done&&t.doneAt);
+  doneTasks.forEach(t=>{
+    const alreadyHasClone=S.tasks.some(x=>x.recurParentId===t.id&&!x.done);
+    if(!alreadyHasClone) spawnRecurringClone({...t,recurParentId:undefined});
+  });
+}
+
+// ── PATCH openCard to load recur field ────────────────────
+const _origOpenCard=openCard;
+window.openCard=function(id){
+  _origOpenCard(id);
+  const t=S.tasks.find(x=>x.id===id);
+  const recurSel=$('cmRecur');
+  if(recurSel)recurSel.value=t?.recur||'';
+};
+
+// ── PATCH saveCard to save recur field ───────────────────
+const _origSaveCardRecur=window.saveCard;
+window.saveCard=function(){
+  // only patch for non-project context
+  if(!projCardEditId){
+    const t=S.tasks.find(x=>x.id===cardEditId);
+    if(t){
+      const recurSel=$('cmRecur');
+      t.recur=recurSel?recurSel.value||'':'';
+    }
+  }
+  _origSaveCardRecur();
+};
+
+// ── PATCH toggleTask to spawn recurring clone on complete ──
+const _origToggleTask=toggleTask;
+window.toggleTask=function(id,ev){
+  const t=S.tasks.find(x=>x.id===id);
+  const wasRecurring=t&&t.recur&&!t.done;
+  _origToggleTask(id,ev);
+  if(wasRecurring&&t.done){
+    t.doneAt=new Date().toISOString();
+    spawnRecurringClone(t);
+    save();renderAll();
+    toast(`↻ Next ${RECUR_LABELS[t.recur]||t.recur} task scheduled`,'info',2500);
+  }
+};
+
+// ── PATCH completeTask similarly ──────────────────────────
+const _origCompleteTask=completeTask;
+window.completeTask=function(id,ev){
+  const t=S.tasks.find(x=>x.id===id);
+  const wasRecurring=t&&t.recur&&!t.done;
+  _origCompleteTask(id,ev);
+  if(wasRecurring){
+    const doneT=S.tasks.find(x=>x.id===id);
+    if(doneT){doneT.doneAt=new Date().toISOString();spawnRecurringClone(doneT);}
+    save();renderAll();
+    toast(`↻ Next ${RECUR_LABELS[t.recur]||t.recur} task scheduled`,'info',2500);
+  }
+};
+
+// ── PATCH cardHTML to show recur badge ───────────────────
+const _origCardHTML=cardHTML;
+window.cardHTML=function(t){
+  let html=_origCardHTML(t);
+  if(t.recur){
+    // inject recur badge into bcard-meta
+    html=html.replace('</div>\n    </div>\n  </div>',
+      `<span class="recur-badge">↻ ${RECUR_LABELS[t.recur]||t.recur}</span></div>\n    </div>\n  </div>`);
+  }
+  return html;
+};
+
+// ── PATCH renderDash focus strips to show pinned tasks ───
+const _origRenderWorkDash=renderWorkDash;
+window.renderWorkDash=function(){
+  _origRenderWorkDash();
+  applyPinnedToFocusStrip('focListW');
+};
+const _origRenderPersonalDash=renderPersonalDash;
+window.renderPersonalDash=function(){
+  _origRenderPersonalDash();
+  applyPinnedToFocusStrip('focList');
+};
+
+function applyPinnedToFocusStrip(listId){
+  const pinned=XD.pinnedToday||[];
+  if(!pinned.length)return;
+  const el=$(listId);if(!el)return;
+  // add pin marker to matching focus cards
+  el.querySelectorAll('.fc').forEach(fc=>{
+    const onclick=fc.getAttribute('onclick')||fc.querySelector('[onclick]')?.getAttribute('onclick')||'';
+    const m=fc.innerHTML.match(/toggleTask\('([^']+)'/);
+    if(!m)return;
+    const tid=m[1];
+    if(pinned.includes(tid)&&!fc.querySelector('.fc-pin')){
+      const num=fc.querySelector('.fc-num');
+      if(num)num.insertAdjacentHTML('afterend','<span class="fc-pin">📌</span>');
+      fc.style.borderLeft='3px solid var(--blue)';
+    }
+  });
+}
+
 // ── MOBILE NAVIGATION ──────────────────────────────────────
 function mobNav(pg){
   showPage(pg);
@@ -2540,8 +2938,11 @@ document.querySelector('.sidebar')?.addEventListener('click',e=>{
 // ── INIT ───────────────────────────────────────────────────
 setMode(currentMode);
 renderXP();
+setupBlockerInput();
 loadData();
 if(!getKey())openKeyModal();
+// show check-in after a short delay so page renders first
+setTimeout(()=>{if(shouldShowCheckin())openCheckin();},1800);
 </script>
 </body>
 </html>
