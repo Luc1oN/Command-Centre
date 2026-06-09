@@ -279,11 +279,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 /* ═══ TRELLO BOARD ═══ */
 .board-topbar{padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;flex-shrink:0}
 .board-filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.board-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:18px 20px 18px;display:flex}
-.board-cols{display:flex;gap:13px;align-items:flex-start;min-height:calc(100vh - 130px)}
+.board-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:18px 20px 18px;display:flex;align-items:flex-start}
+.board-cols{display:flex;gap:13px;align-items:flex-start;min-height:0}
 /* bucket column */
-.bcol{width:272px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;max-height:calc(100vh - 150px);transition:background .25s,border-color .25s}
-.bcol-head{padding:10px 12px 8px;display:flex;align-items:center;gap:7px;flex-shrink:0}
+.bcol{width:272px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;max-height:calc(100vh - 120px);transition:background .25s,border-color .25s}.bcol-head{padding:10px 12px 8px;display:flex;align-items:center;gap:7px;flex-shrink:0}
 .bcol-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;cursor:pointer}
 .bcol-title-wrap{flex:1;min-width:0}
 .bcol-title{font-size:13px;font-weight:700;color:var(--text);cursor:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -607,7 +606,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
   .board-scroll{padding:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .board-cols{gap:10px}
   .bcol{width:260px}
-  .bcol-cards{max-height:60vh}
+  .bcol-cards{max-height:calc(100svh - 220px)}
 
   /* card modal — full screen on mobile */
   .overlay{padding:0;align-items:flex-end}
