@@ -103,6 +103,8 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 /* PAGES */
 .page{display:none}
 .page.active{display:flex;flex-direction:column;flex:1}
+#page-tasks{overflow:hidden}
+#page-project{overflow:hidden}
 /* DASHBOARD */
 .dbody{padding:22px;display:flex;flex-direction:column;gap:18px}
 /* hero */
@@ -603,7 +605,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
   /* board */
   .board-topbar{padding:9px 12px;gap:8px;flex-wrap:wrap}
   .board-filters{gap:5px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
-  .board-scroll{padding:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .board-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:18px 20px 18px;display:flex;align-items:flex-start;min-height:0}
   .board-cols{gap:10px}
   .bcol{width:260px}
   .bcol-cards{max-height:calc(100svh - 220px)}
