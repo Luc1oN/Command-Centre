@@ -103,8 +103,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 /* PAGES */
 .page{display:none}
 .page.active{display:flex;flex-direction:column;flex:1}
-#page-tasks{overflow:hidden}
-#page-project{overflow:hidden}
 /* DASHBOARD */
 .dbody{padding:22px;display:flex;flex-direction:column;gap:18px}
 /* hero */
@@ -281,10 +279,11 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 /* ═══ TRELLO BOARD ═══ */
 .board-topbar{padding:10px 20px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;flex-shrink:0}
 .board-filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.board-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:18px 20px 18px;display:flex;align-items:flex-start}
-.board-cols{display:flex;gap:13px;align-items:flex-start;min-height:0}
+.board-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:18px 20px 18px;display:flex}
+.board-cols{display:flex;gap:13px;align-items:flex-start;min-height:calc(100vh - 130px)}
 /* bucket column */
-.bcol{width:272px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;max-height:calc(100vh - 120px);transition:background .25s,border-color .25s}.bcol-head{padding:10px 12px 8px;display:flex;align-items:center;gap:7px;flex-shrink:0}
+.bcol{width:272px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;max-height:calc(100vh - 150px);transition:background .25s,border-color .25s}
+.bcol-head{padding:10px 12px 8px;display:flex;align-items:center;gap:7px;flex-shrink:0}
 .bcol-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;cursor:pointer}
 .bcol-title-wrap{flex:1;min-width:0}
 .bcol-title{font-size:13px;font-weight:700;color:var(--text);cursor:text;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -554,6 +553,84 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 .ci-blocker-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;padding:0 2px}
 /* pinned indicator on focus cards */
 .fc-pin{font-size:11px;flex-shrink:0;opacity:.7}
+/* ── FOCUS TIMER PAGE ── */
+.focus-page{display:flex;flex:1;min-height:0;height:calc(100vh - 58px)}
+/* LEFT — timer panel */
+.focus-left{
+  width:50%;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 24px;gap:20px;
+  border-right:1px solid var(--border);
+  background:var(--surface);
+  overflow-y:auto;
+}
+/* mode tabs */
+.pom-tabs{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:99px;padding:3px;gap:2px}
+.pom-tab{padding:6px 16px;border:none;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text3);background:transparent;transition:all .18s;white-space:nowrap}
+.pom-tab.active{color:white;box-shadow:0 1px 5px rgba(0,0,0,.2)}
+/* ring */
+.pom-ring-wrap{position:relative;width:260px;height:260px;flex-shrink:0}
+.pom-ring-svg{width:100%;height:100%;transform:rotate(-90deg)}
+.pom-ring-track{fill:none;stroke:var(--surface3);stroke-width:10}
+.pom-ring-prog{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .5s linear,stroke .4s ease}
+.pom-ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.pom-time{font-size:52px;font-weight:800;letter-spacing:-2px;font-variant-numeric:tabular-nums;line-height:1}
+.pom-mode-lbl{font-size:13px;font-weight:600;color:var(--text2)}
+.pom-session-ct{font-size:11px;color:var(--text3)}
+/* controls */
+.pom-controls{display:flex;align-items:center;gap:14px}
+.pom-ctrl-btn{border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
+.pom-ctrl-btn.primary{width:64px;height:64px;color:white;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.pom-ctrl-btn.primary:hover{transform:scale(1.06);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.pom-ctrl-btn.primary:active{transform:scale(.96)}
+.pom-ctrl-btn.ghost{width:44px;height:44px;background:var(--surface2);border:1px solid var(--border);color:var(--text2)}
+.pom-ctrl-btn.ghost:hover{background:var(--surface3);color:var(--text)}
+/* settings row */
+.pom-settings{display:flex;align-items:center;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.pom-setting-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 14px;cursor:pointer;transition:background .12s;flex:1}
+.pom-setting-item:hover{background:var(--surface3)}
+.pom-setting-lbl{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.pom-setting-val{font-size:14px;font-weight:800;color:var(--text)}
+.pom-setting-sep{width:1px;background:var(--border);height:36px;flex-shrink:0}
+/* stats */
+.pom-stats{display:flex;gap:0;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;width:100%}
+.pom-stat{flex:1;display:flex;flex-direction:column;align-items:center;padding:12px 8px;gap:3px;border-right:1px solid var(--border)}
+.pom-stat:last-child{border-right:none}
+.pom-stat-val{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px}
+.pom-stat-lbl{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+/* RIGHT — task list */
+.focus-right{flex:1;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+.focus-tasks-head{padding:16px 20px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.focus-tasks-title{font-size:15px;font-weight:800;letter-spacing:-.3px;margin-bottom:10px}
+.focus-task-filters{display:flex;gap:6px;flex-wrap:wrap}
+.focus-task-list{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+/* task rows in focus panel */
+.ft-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:11px;transition:box-shadow .15s,transform .12s,background .2s;cursor:default}
+.ft-item:hover{box-shadow:var(--shm);transform:translateX(2px)}
+.ft-item.done{opacity:.4}
+.ft-item.done .ft-title{text-decoration:line-through}
+.ft-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.ft-check:hover{border-color:var(--blue);background:var(--blue-glow)}
+.ft-item.done .ft-check{background:var(--green);border-color:var(--green)}
+.ft-check-icon{display:none}
+.ft-item.done .ft-check-icon{display:block}
+.ft-body{flex:1;min-width:0}
+.ft-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.4}
+.ft-chips{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.ft-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.ft-edit{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;border:1px solid var(--border2);background:var(--surface2);color:var(--text3);cursor:pointer;font-family:inherit;opacity:0;transition:opacity .1s}
+.ft-item:hover .ft-edit{opacity:1}
+.ft-edit:hover{border-color:var(--blue);color:var(--blue)}
+.ft-empty{padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)}
+.ft-empty-icon{font-size:28px;margin-bottom:8px}
+/* mobile focus page */
+@media(max-width:768px){
+  .focus-page{flex-direction:column;height:auto}
+  .focus-left{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:20px 16px;gap:14px}
+  .pom-ring-wrap{width:200px;height:200px}
+  .pom-time{font-size:40px}
+  .focus-right{min-height:50vh}
+}
 /* recur badge on cards */
 .recur-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;background:var(--purple-bg);border:1px solid var(--purple-bd);color:var(--purple);white-space:nowrap}
 /* UTILITIES */
@@ -605,10 +682,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
   /* board */
   .board-topbar{padding:9px 12px;gap:8px;flex-wrap:wrap}
   .board-filters{gap:5px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
-  .board-scroll{flex:1;overflow-x:auto;overflow-y:hidden;padding:18px 20px 18px;display:flex;align-items:flex-start;min-height:0}
+  .board-scroll{padding:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .board-cols{gap:10px}
   .bcol{width:260px}
-  .bcol-cards{max-height:calc(100svh - 220px)}
+  .bcol-cards{max-height:60vh}
 
   /* card modal — full screen on mobile */
   .overlay{padding:0;align-items:flex-end}
@@ -740,6 +817,10 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
       <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.2"/><rect x="9" y="1" width="6" height="6" rx="1.2" opacity=".4"/><rect x="1" y="9" width="6" height="6" rx="1.2" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.2" opacity=".4"/></svg>
       Dashboard
       <span class="sb-badge" id="pendBadge">0</span>
+    </button>
+    <button class="sb-item" id="nav-focus" onclick="showPage('focus')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+      Focus Timer
     </button>
     <button class="sb-item" id="nav-tasks" onclick="showPage('tasks')">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h10"/></svg>
@@ -1016,6 +1097,105 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
       </div>
     </div>
 
+  </div>
+
+  <!-- ═══ FOCUS TIMER PAGE ═══ -->
+  <div class="page" id="page-focus">
+    <div class="focus-page">
+
+      <!-- LEFT: TIMER -->
+      <div class="focus-left">
+
+        <!-- mode tabs -->
+        <div class="pom-tabs">
+          <button class="pom-tab active" id="pomtab-focus"      onclick="setPomMode('focus')">Focus</button>
+          <button class="pom-tab"        id="pomtab-short"      onclick="setPomMode('short')">Short Break</button>
+          <button class="pom-tab"        id="pomtab-long"       onclick="setPomMode('long')">Long Break</button>
+        </div>
+
+        <!-- ring + time -->
+        <div class="pom-ring-wrap">
+          <svg class="pom-ring-svg" viewBox="0 0 280 280">
+            <circle class="pom-ring-track" cx="140" cy="140" r="120"/>
+            <circle class="pom-ring-prog"  cx="140" cy="140" r="120" id="pomRingProg"/>
+          </svg>
+          <div class="pom-ring-inner">
+            <div class="pom-time" id="pomTime">25:00</div>
+            <div class="pom-mode-lbl" id="pomModeLbl">Focus Session</div>
+            <div class="pom-session-ct" id="pomSessionCt">Session 1 of 4</div>
+          </div>
+        </div>
+
+        <!-- controls -->
+        <div class="pom-controls">
+          <button class="pom-ctrl-btn ghost" onclick="resetPom()" title="Reset">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9a6 6 0 106-6H6M6 1L3 4l3 3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="pom-ctrl-btn primary" id="pomPlayBtn" onclick="togglePom()">
+            <svg id="pomPlayIcon" width="22" height="22" viewBox="0 0 22 22" fill="currentColor"><path d="M7 4.5l12 6.5-12 6.5V4.5z"/></svg>
+          </button>
+          <button class="pom-ctrl-btn ghost" onclick="skipPom()" title="Skip to next">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4l8 5-8 5V4z" fill="currentColor" stroke="none"/><path d="M14 4v10" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <!-- settings row -->
+        <div class="pom-settings">
+          <div class="pom-setting-item" onclick="editPomDuration('focus')">
+            <div class="pom-setting-lbl">Focus</div>
+            <div class="pom-setting-val" id="pset-focus">25m</div>
+          </div>
+          <div class="pom-setting-sep"></div>
+          <div class="pom-setting-item" onclick="editPomDuration('short')">
+            <div class="pom-setting-lbl">Short Break</div>
+            <div class="pom-setting-val" id="pset-short">5m</div>
+          </div>
+          <div class="pom-setting-sep"></div>
+          <div class="pom-setting-item" onclick="editPomDuration('long')">
+            <div class="pom-setting-lbl">Long Break</div>
+            <div class="pom-setting-val" id="pset-long">15m</div>
+          </div>
+          <div class="pom-setting-sep"></div>
+          <div class="pom-setting-item" onclick="editPomCycles()">
+            <div class="pom-setting-lbl">Cycles</div>
+            <div class="pom-setting-val" id="pset-cycles">4</div>
+          </div>
+        </div>
+
+        <!-- today's stats -->
+        <div class="pom-stats">
+          <div class="pom-stat">
+            <div class="pom-stat-val" id="pstatPomodoros">0</div>
+            <div class="pom-stat-lbl">Today</div>
+          </div>
+          <div class="pom-stat">
+            <div class="pom-stat-val" id="pstatFocusMin">0m</div>
+            <div class="pom-stat-lbl">Focused</div>
+          </div>
+          <div class="pom-stat">
+            <div class="pom-stat-val" id="pstatStreak">0</div>
+            <div class="pom-stat-lbl">Streak</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: TASK LIST -->
+      <div class="focus-right">
+        <div class="focus-tasks-head">
+          <div class="focus-tasks-title">Today's Tasks</div>
+          <div class="focus-task-filters" id="focTimerFilters">
+            <button class="fpill active" data-tf="all"      onclick="setTF('all',this)">All</button>
+            <button class="fpill"        data-tf="work"     onclick="setTF('work',this)">Work</button>
+            <button class="fpill"        data-tf="personal" onclick="setTF('personal',this)">Personal</button>
+            <button class="fpill"        data-tf="high"     onclick="setTF('high',this)">High</button>
+            <button class="fpill"        data-tf="today"    onclick="setTF('today',this)">Due Today</button>
+          </div>
+        </div>
+        <div class="focus-task-list" id="focTimerList"></div>
+      </div>
+
+    </div>
   </div>
 
   <!-- TASKS (TRELLO BOARD) -->
@@ -1631,7 +1811,7 @@ window.recoverTasks=function(){
 };
 
 // ── RENDER ALL ─────────────────────────────────────────────
-function renderAll(){renderDash();renderKanban();renderTennis();renderTrips();renderPack();renderNotes();renderSbProjects();checkStreak();renderXP();const p=S.tasks.filter(t=>!t.done).length;['pendBadge','taskBadge'].forEach(id=>{const e=$(id);if(e)e.textContent=p;});updateMobBadge();}
+function renderAll(){renderDash();renderKanban();renderTennis();renderTrips();renderPack();renderNotes();renderSbProjects();checkStreak();renderXP();const p=S.tasks.filter(t=>!t.done).length;['pendBadge','taskBadge'].forEach(id=>{const e=$(id);if(e)e.textContent=p;});updateMobBadge();if(currentPage==='focus')renderFocusTaskList();}
 
 // ── DASHBOARD ──────────────────────────────────────────────
 function renderDash(){
@@ -2112,12 +2292,11 @@ function showPage(pg){
   document.querySelectorAll(".sb-item,.sb-proj-item").forEach(b=>b.classList.remove('active'));
   const p=$(`page-${pg}`);if(p)p.classList.add('active');
   const n=$(`nav-${pg}`);if(n)n.classList.add("active");if(pg==="project"){const ap=document.querySelector(`.sb-proj-item[onclick*="${activeProjId}"]`);if(ap)ap.classList.add("active");}
-  const titles={dashboard:'Dashboard',tasks:'Tasks',more:'More'};
+  const titles={dashboard:'Dashboard',tasks:'Tasks',more:'More',focus:'Focus Timer'};
   $('tbTitle').textContent=titles[pg]||pg;
   currentPage=pg;
   if(pg==='tasks'){
     renderBoard();
-    // sync board mode label
     const bml=$('boardModeLabel');
     if(bml){
       const isW=currentMode==='work';
@@ -2126,6 +2305,19 @@ function showPage(pg){
         ?'font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--blue-glow);border:1px solid color-mix(in srgb,var(--blue) 40%,transparent);color:var(--blue)'
         :'font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--green-bg);border:1px solid var(--green-bd);color:var(--green)';
     }
+  }
+  if(pg==='focus'){
+    renderPomTimer();
+    renderFocusTaskList();
+  }
+  // pause timer if navigating away from focus page
+  if(pg!=='focus'&&pomState&&pomState.running){
+    clearInterval(pomInterval);pomInterval=null;
+    pomState.running=false;
+    renderPomTimer();
+    savePomState();
+    document.title='Command Centre';
+    toast('Timer paused','default',1800);
   }
 }
 
@@ -2590,7 +2782,298 @@ function renderIconPicker(containerId,icons,onSelect,selected){
   el.innerHTML=icons.map(i=>`<span class="icon-opt ${selected===i?'sel':''}" onclick="this.parentNode.querySelectorAll('.icon-opt').forEach(x=>x.classList.remove('sel'));this.classList.add('sel');(${onSelect.toString()})('${i}')">${i}</span>`).join('');
 }
 
-// ── DAILY CHECK-IN ─────────────────────────────────────────
+// ── POMODORO TIMER ─────────────────────────────────────────
+const POM_K='cmdcentre_pom';
+const POM_COLORS={focus:'var(--blue)',short:'var(--green)',long:'var(--purple)'};
+const POM_LABELS={focus:'Focus Session',short:'Short Break',long:'Long Break'};
+
+let pomState={
+  mode:'focus',      // focus | short | long
+  running:false,
+  secondsLeft:25*60,
+  totalSeconds:25*60,
+  session:1,         // current session number
+  cycles:4,          // pomodoros before long break
+  durations:{focus:25,short:5,long:15},
+  todayPomodoros:0,
+  todayFocusMin:0,
+  lastReset:new Date().toDateString(),
+};
+let pomInterval=null;
+
+function loadPomState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(POM_K));
+    if(saved){
+      // reset daily stats if it's a new day
+      if(saved.lastReset!==new Date().toDateString()){
+        saved.todayPomodoros=0;saved.todayFocusMin=0;
+        saved.lastReset=new Date().toDateString();
+        saved.running=false;
+      }
+      pomState={...pomState,...saved,running:false};
+    }
+  }catch{}
+}
+function savePomState(){
+  const toSave={...pomState,running:false}; // never persist running=true
+  localStorage.setItem(POM_K,JSON.stringify(toSave));
+}
+
+function pomCircumference(){return 2*Math.PI*120;} // r=120
+
+function renderPomTimer(){
+  const circ=pomCircumference();
+  const pct=pomState.totalSeconds>0?(pomState.secondsLeft/pomState.totalSeconds):1;
+  const offset=circ-(circ*pct);
+  const prog=$('pomRingProg');
+  if(prog){
+    prog.style.strokeDasharray=circ;
+    prog.style.strokeDashoffset=offset;
+    prog.style.stroke=POM_COLORS[pomState.mode]||'var(--blue)';
+  }
+  // time display
+  const m=Math.floor(pomState.secondsLeft/60);
+  const s=pomState.secondsLeft%60;
+  const timeStr=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const pt=$('pomTime');if(pt)pt.textContent=timeStr;
+
+  // tab colours
+  const tabColors={focus:'var(--blue)',short:'var(--green)',long:'var(--purple)'};
+  document.querySelectorAll('.pom-tab').forEach(t=>t.classList.remove('active'));
+  const at=$(`pomtab-${pomState.mode}`);
+  if(at){at.classList.add('active');at.style.background=tabColors[pomState.mode]||'var(--blue)';}
+  // reset other tabs
+  ['focus','short','long'].filter(m=>m!==pomState.mode).forEach(m=>{
+    const tab=$(`pomtab-${m}`);if(tab)tab.style.background='';
+  });
+
+  // labels
+  const ml=$('pomModeLbl');if(ml)ml.textContent=POM_LABELS[pomState.mode];
+  const sc=$('pomSessionCt');
+  if(sc)sc.textContent=pomState.mode==='focus'?`Session ${pomState.session} of ${pomState.cycles}`:(pomState.mode==='short'?'Short Break ☕':'Long Break 🧘');
+
+  // play/pause icon
+  const icon=$('pomPlayIcon');
+  if(icon){
+    icon.innerHTML=pomState.running
+      ?'<rect x="4" y="3" width="5" height="16" rx="1.5"/><rect x="13" y="3" width="5" height="16" rx="1.5"/>'
+      :'<path d="M7 4.5l12 6.5-12 6.5V4.5z"/>';
+  }
+  const playBtn=$('pomPlayBtn');
+  if(playBtn)playBtn.style.background=POM_COLORS[pomState.mode]||'var(--blue)';
+
+  // stats
+  const sp=$('pstatPomodoros');if(sp)sp.textContent=pomState.todayPomodoros;
+  const sf=$('pstatFocusMin');if(sf)sf.textContent=`${pomState.todayFocusMin}m`;
+  const ss=$('pstatStreak');if(ss)ss.textContent=XD.streak||0;
+
+  // settings
+  const sf2=$('pset-focus');if(sf2)sf2.textContent=`${pomState.durations.focus}m`;
+  const ss2=$('pset-short');if(ss2)ss2.textContent=`${pomState.durations.short}m`;
+  const sl=$('pset-long');if(sl)sl.textContent=`${pomState.durations.long}m`;
+  const sc2=$('pset-cycles');if(sc2)sc2.textContent=pomState.cycles;
+
+  // page title while running
+  if(pomState.running) document.title=`${timeStr} — Command Centre`;
+  else document.title='Command Centre';
+}
+
+function togglePom(){
+  if(pomState.running){
+    clearInterval(pomInterval);pomInterval=null;
+    pomState.running=false;
+  } else {
+    pomState.running=true;
+    pomInterval=setInterval(pomTick,1000);
+  }
+  renderPomTimer();
+  savePomState();
+}
+
+function pomTick(){
+  pomState.secondsLeft--;
+  if(pomState.secondsLeft<=0){
+    pomComplete();
+  } else {
+    renderPomTimer();
+  }
+}
+
+function pomComplete(){
+  clearInterval(pomInterval);pomInterval=null;
+  pomState.running=false;
+  pomBeep();
+
+  if(pomState.mode==='focus'){
+    pomState.todayPomodoros++;
+    pomState.todayFocusMin+=pomState.durations.focus;
+    earnXP(20,'Pomodoro completed 🍅');
+    // decide next mode
+    if(pomState.session>=pomState.cycles){
+      pomState.session=1;
+      setPomMode('long',false);
+      toast(`🧘 Long break time — ${pomState.durations.long} min. Well done!`,'success',4000);
+    } else {
+      pomState.session++;
+      setPomMode('short',false);
+      toast(`☕ Short break — ${pomState.durations.short} min. Session ${pomState.session-1} done!`,'success',3500);
+    }
+  } else {
+    // break done
+    setPomMode('focus',false);
+    toast('🎯 Break over — time to focus!','info',3000);
+  }
+  savePomState();
+  renderPomTimer();
+  renderFocusTaskList(); // refresh task list
+}
+
+function setPomMode(mode, resetTimer=true){
+  if(pomInterval){clearInterval(pomInterval);pomInterval=null;}
+  pomState.mode=mode;
+  pomState.running=false;
+  if(resetTimer){
+    pomState.totalSeconds=pomState.durations[mode]*60;
+    pomState.secondsLeft=pomState.totalSeconds;
+    if(mode==='focus'&&resetTimer)pomState.session=1;
+  } else {
+    pomState.totalSeconds=pomState.durations[mode]*60;
+    pomState.secondsLeft=pomState.totalSeconds;
+  }
+  savePomState();
+  renderPomTimer();
+  document.title='Command Centre';
+}
+
+function resetPom(){
+  if(pomInterval){clearInterval(pomInterval);pomInterval=null;}
+  pomState.running=false;
+  pomState.totalSeconds=pomState.durations[pomState.mode]*60;
+  pomState.secondsLeft=pomState.totalSeconds;
+  renderPomTimer();
+  savePomState();
+  document.title='Command Centre';
+}
+
+function skipPom(){
+  if(pomInterval){clearInterval(pomInterval);pomInterval=null;}
+  pomState.running=false;
+  if(pomState.mode==='focus'){
+    if(pomState.session>=pomState.cycles){pomState.session=1;setPomMode('long');}
+    else{pomState.session++;setPomMode('short');}
+  } else {
+    setPomMode('focus');
+  }
+}
+
+function editPomDuration(type){
+  const cur=pomState.durations[type];
+  const val=prompt(`${type==='focus'?'Focus':type==='short'?'Short Break':'Long Break'} duration (minutes):`,cur);
+  if(!val)return;
+  const n=parseInt(val);
+  if(isNaN(n)||n<1||n>120){toast('Enter a number between 1 and 120','error');return;}
+  pomState.durations[type]=n;
+  if(pomState.mode===type&&!pomState.running){
+    pomState.totalSeconds=n*60;pomState.secondsLeft=n*60;
+  }
+  savePomState();renderPomTimer();
+}
+
+function editPomCycles(){
+  const val=prompt('How many focus sessions before a long break?',pomState.cycles);
+  if(!val)return;
+  const n=parseInt(val);
+  if(isNaN(n)||n<1||n>10){toast('Enter a number between 1 and 10','error');return;}
+  pomState.cycles=n;
+  savePomState();renderPomTimer();
+}
+
+// simple beep via Web Audio API
+function pomBeep(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const freqs=[520,660,520];
+    freqs.forEach((freq,i)=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.frequency.value=freq;osc.type='sine';
+      gain.gain.setValueAtTime(.3,ctx.currentTime+i*.18);
+      gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+i*.18+.25);
+      osc.start(ctx.currentTime+i*.18);
+      osc.stop(ctx.currentTime+i*.18+.25);
+    });
+  }catch{}
+}
+
+// ── FOCUS TASK LIST ────────────────────────────────────────
+let timerFilter='all';
+
+function setTF(f,btn){
+  timerFilter=f;
+  document.querySelectorAll('[data-tf]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFocusTaskList();
+}
+
+function applyTimerFilter(tasks){
+  const today=new Date();today.setHours(0,0,0,0);
+  const tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
+  if(timerFilter==='all')     return tasks;
+  if(timerFilter==='work')    return tasks.filter(t=>t.cat==='work');
+  if(timerFilter==='personal')return tasks.filter(t=>t.cat==='personal');
+  if(timerFilter==='high')    return tasks.filter(t=>t.pri==='high');
+  if(timerFilter==='today')   return tasks.filter(t=>t.due&&new Date(t.due+'T00:00:00')>=today&&new Date(t.due+'T00:00:00')<tomorrow);
+  return tasks;
+}
+
+function renderFocusTaskList(){
+  const el=$('focTimerList');if(!el)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
+  const pinned=XD.pinnedToday||[];
+
+  // all active tasks — pinned first, then high priority, then rest
+  let all=S.tasks.filter(t=>!t.done);
+  const pinnedTasks=all.filter(t=>pinned.includes(t.id));
+  const unpinned=all.filter(t=>!pinned.includes(t.id));
+  const sorted=[...pinnedTasks,...unpinned.filter(t=>t.pri==='high'),...unpinned.filter(t=>t.pri==='medium'),...unpinned.filter(t=>t.pri==='low')];
+  const filtered=applyTimerFilter(sorted);
+
+  if(!filtered.length){
+    el.innerHTML=`<div class="ft-empty"><div class="ft-empty-icon">✅</div>All clear${timerFilter!=='all'?' for this filter':''}.</div>`;
+    return;
+  }
+
+  el.innerHTML=filtered.map(t=>{
+    const dueDate=t.due?new Date(t.due+'T00:00:00'):null;
+    const isOverdue=dueDate&&dueDate<today&&!t.done;
+    const isDueToday=dueDate&&dueDate>=today&&dueDate<tomorrow;
+    const isPinned=pinned.includes(t.id);
+    const bkt=S.buckets?.find(b=>b.id===t.bucketId);
+    return`<div class="ft-item ${t.done?'done':''}">
+      <div class="ft-check" onclick="toggleTask('${t.id}',event)">
+        <svg class="ft-check-icon" width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ft-body">
+        <div class="ft-title">${isPinned?'📌 ':''}${esc(t.text)}</div>
+        <div class="ft-chips">
+          <span class="chip chip-${t.pri}">${t.pri}</span>
+          <span class="chip chip-${t.cat||'work'}">${t.cat||'work'}</span>
+          ${isOverdue?`<span class="chip chip-overdue">overdue</span>`:''}
+          ${isDueToday?`<span class="chip" style="background:var(--amber-bg);border-color:var(--amber-bd);color:var(--amber)">Today</span>`:''}
+          ${t.recur?`<span class="recur-badge">↻ ${RECUR_LABELS[t.recur]||t.recur}</span>`:''}
+          ${bkt?`<span class="chip" style="background:var(--surface2);border-color:var(--border2);color:var(--text3)">${esc(bkt.title)}</span>`:''}
+        </div>
+      </div>
+      <div class="ft-right">
+        <div class="pri-bar ${t.pri}" style="height:24px"></div>
+        <button class="ft-edit" onclick="openCard('${t.id}')">Edit</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 const CHECKIN_K='cmdcentre_checkin';
 let ciPinned=[],ciBlockers=[],ciStep=1;
 
@@ -2937,6 +3420,7 @@ document.querySelector('.sidebar')?.addEventListener('click',e=>{
 });
 
 // ── INIT ───────────────────────────────────────────────────
+loadPomState();
 setMode(currentMode);
 renderXP();
 setupBlockerInput();
